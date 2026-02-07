@@ -7,7 +7,7 @@ namespace geom {
 
 	struct PerpendicularBisector{
 		Line line;
-		Point midpoint;
+		geom::Point midpoint;
 	};
 
 	struct LineSegment {
