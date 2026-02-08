@@ -5,6 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 
 project ("GeomLib")
+include(FetchContent)
 
 
 # Add source to this project's executable.
@@ -20,14 +21,22 @@ target_include_directories(GeomLib PUBLIC
 )
 
 add_executable(GeomApp "src/main.cpp")
-target_link_libraries(GeomApp PRIVATE GeomLib)
+
+add_subdirectory(libraries)
+target_link_libraries(GeomApp PRIVATE GeomLib raylib)
 
 
 target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC RESOURCES_PATH="./resources/") # Uncomment this line to setup the ASSETS_PATH macro to the final assets directory when you share the project
 
 set_property(TARGET GeomLib PROPERTY CXX_STANDARD 20)
 
-# TODO: Add tests and install targets if needed.
+
+
+
+
+
+
+
 
 # --- Testing Section ---
 
@@ -36,7 +45,6 @@ include(CTest)
 enable_testing()
 
 # 2. Download GoogleTest automatically
-include(FetchContent)
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/refs/heads/main.zip
@@ -57,3 +65,9 @@ target_link_libraries(GeomLibTests PRIVATE GeomLib GTest::gtest_main)
 # 5. Discover and add tests
 include(GoogleTest)
 gtest_discover_tests(GeomLibTests)
+
+
+
+
+
+#---- third party libraries ----
