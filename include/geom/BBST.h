@@ -185,6 +185,12 @@ private:
             return findParent(node->left, key, node);
         return findParent(node->right, key, node);
     }
+    Node* findMax(Node* node) const {
+        while (node && node->right) node = node->right;
+        return node;
+    }
+
+
 
 public:
     BalancedBinaryTree() : root(nullptr) {}
@@ -211,6 +217,14 @@ public:
 
         if (node->left) leftOut = node->left->data;
         if (node->right) rightOut = node->right->data;
+        return true;
+    }
+
+    bool popMax(T& out) {
+        Node* m = findMax(root);
+        if (!m) return false;
+        out = m->data;
+        root = remove(root, m->data);
         return true;
     }
 };

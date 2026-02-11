@@ -1,4 +1,6 @@
 #include "point.h"
+#include <limits> 
+#include <cmath>
 #pragma once
 namespace geom {
 	struct Line {
@@ -39,5 +41,6 @@ namespace geom {
 			line.b = start.y - line.a * start.x;           // intercept
 		}
 	};
+	Point find_intersection(const LineSegment& seg1, const LineSegment& seg2);
 
 }

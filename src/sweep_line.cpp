@@ -11,15 +11,12 @@ struct event {
 	int type;
 	Point point;
 	geom::LineSegment segment;
+	geom::LineSegment segment2;
+	event() : type(0), point(0, 0), segment() {} // Default constructor added
 	event(int type, Point point, geom::LineSegment segment) : type(type), point(point), segment(segment) {}
-};
+	event(int type, Point point, geom::LineSegment segment, geom::LineSegment segment2) : type(type), point(point), segment(segment), segment2(segment) {}
 
-	struct node {
-		geom::LineSegment segment;
-		node* left;
-		node* right;
-		node(geom::LineSegment segment) : segment(segment), left(nullptr), right(nullptr) {}
-	};
+};
 
 
 int y = 12;
@@ -30,7 +27,30 @@ struct CustomComparator {
 	}
 };
 
-int handle_start_event(const event& e, BalancedBinaryTree<geom::LineSegment, CustomComparator>& tree) {
+
+struct EventComparator {
+	bool operator()(const event& a, const event& b) const {
+
+		// 1?? Sort by y (ascending)
+		if (a.point.y != b.point.y)
+			return a.point.y < b.point.y;
+
+		// 2?? If y equal ? smaller x first
+		if (a.point.x != b.point.x)
+			return a.point.x < b.point.x;
+
+		// 3?? If x equal ? smaller type first (1 < 2 < 3)
+		if (a.type != b.type)
+			return a.type < b.type;
+
+		// If all equal ? they are considered equal
+		return false;
+	}
+};
+
+
+
+int handle_start_event(const event& e, BalancedBinaryTree<geom::LineSegment, CustomComparator>& tree, BalancedBinaryTree<event, EventComparator>& Q) {
 	std::cout << "Handling start event for segment: (" << e.segment.start.x << ", " << e.segment.start.y << ") to ("
 		<< e.segment.end.x << ", " << e.segment.end.y << ")" << std::endl;
 	tree.insert(e.segment);
@@ -41,6 +61,14 @@ int handle_start_event(const event& e, BalancedBinaryTree<geom::LineSegment, Cus
 	if (notRoot) {
 		std::cout <<"this is not root, parent is: (" << parent.start.x << ", " << parent.start.y << ") to ("
 			<< parent.end.x << ", " << parent.end.y << ")" << std::endl;
+		Point intersection = find_intersection(parent, e.segment);
+		if (!std::isnan(intersection.x) && !std::isnan(intersection.y)) {
+			std::cout << "Intersection found at: (" << intersection.x << ", " << intersection.y << ")" << std::endl;
+			Q.insert(event{ 3, intersection, parent, e.segment });
+		}
+		else {
+			std::cout << "No intersection found between parent and current segment." << std::endl;
+		}
 	}
 	else {
 		std::cout << "this is root" << std::endl;
@@ -69,27 +97,25 @@ void sweepLine() {
 	// intersection point = type 3
 
 	// Vector of events  
-	vector<event> events;
+	BalancedBinaryTree<event, EventComparator> Q;
 
-	// Add events to the vector  
+	// insert initial events
 	for (const auto& segment : segments) {
-		events.emplace_back(1, segment.start, segment); // Start point  
-		events.emplace_back(2, segment.end, segment);   // End point  
+		Q.insert(event{ 1, segment.start, segment });
+		Q.insert(event{ 2, segment.end, segment });
 	}
 
-	// Sort events based on the y-coordinate, and if equal, by type (start before end)  this uses a lambda function for comparison
-	std::sort(events.begin(), events.end(), [](const event& a, const event& b) {
-		if (a.point.y != b.point.y)
-			return a.point.y < b.point.y;
-		return a.type < b.type;
-		});
+	// process in descending y
+
 
 	BalancedBinaryTree<geom::LineSegment, CustomComparator> tree;
 
 
-	for (const auto& e : events) {
+	event e;
+	while (Q.popMax(e)) {
+		y = e.point.y; // Update the global y-coordinate for the comparator
 		if (e.type == 1) {
-			handle_start_event(e, tree);
+			handle_start_event(e, tree, Q);
 			// Handle start point: add segment to active set  
 		}
 		else if (e.type == 2) {
@@ -112,15 +138,15 @@ void sweepLine() {
 int test_bbst()
 {
 	std::cout << y << std::endl;
-	BalancedBinaryTree<geom::LineSegment, CustomComparator> tree;
-	geom::Point p1(1, 2), p2(3, 4);
-	geom::LineSegment line1{ p1, p2 };
+	BalancedBinaryTree<LineSegment, CustomComparator> tree;
+	Point p1(1, 2), p2(3, 4);
+	LineSegment line1{ p1, p2 };
 	tree.insert(line1);
 	std::cout << "Inserted line segment: (" << line1.start.x << ", " << line1.start.y << ") to ("
 		<< line1.end.x << ", " << line1.end.y << ")" << std::endl;
 	y = 20; // Change the value of y to see the effect in the comparator
-	geom::Point p3(7, 8), p4(4, 4);
-	geom::LineSegment line2{ p3, p4 };
+	Point p3(7, 8), p4(4, 4);
+	LineSegment line2{ p3, p4 };
 	tree.insert(line2);
 	std::cout << "Inserted line segment";
 	return 0;
